@@ -22,11 +22,11 @@ else {
 }
 #Creates function to exit the script
 function Exit-Script {Write-Host "Canceled Script!" -ForegroundColor Red; Write-Host "`nPress any key to exit:`n"; [Console]::ReadKey() | Out-Null; exit}
-#Checks to see if path was not found.
+#Checks to see if the path was not found correctly.
 if (-not $notfound -and ($userinput -ne "Yes")) {
     
     if ((-not $notfound -and ($userinput -eq "No")) -or ($notfound -and ($userinput -eq "OK"))) {
-        #Brings up folder dialog if path wasn't found correctly
+        #Brings up folder dialog if the path wasn't found correctly
         $FolderDiag = New-Object System.Windows.Forms.FolderBrowserDialog -Property @{
             SelectedPath = "${Env:ProgramFiles(x86)}\Steam\"
             Description = 'Select your Steam install directory:'
@@ -36,10 +36,10 @@ if (-not $notfound -and ($userinput -ne "Yes")) {
         $steaminstallpath = $FolderDiag.SelectedPath
         $FolderDiag.Dispose()
         Remove-Variable "FolderDiag"
-        #Executes the Exit-Script function if user cancels selection
+        #Executes the Exit-Script function if the user cancels the selection
         if ($outcome -eq "Cancel") {Exit-Script}
     }
-    #Executes the Exit-Script function if user presses cancel or the exit button
+    #Executes the Exit-Script function if the user pressed cancel or the exit button
     else {
         Exit-Script
     }
@@ -48,13 +48,13 @@ if (-not $notfound -and ($userinput -ne "Yes")) {
 $notfound = $false
 #Grabs the content of the libraryfolders.vdf file
 $applist = Get-Content "$steaminstallpath/config/libraryfolders.vdf" -ErrorVariable 'notfound' -ErrorAction SilentlyContinue
-#Executes the Exit-Script function if script couldn't find the libraryfolders.vdf file
+#Executes the Exit-Script function if the script couldn't find the libraryfolders.vdf file
 if ($notfound) {Write-Host "Cannot find libraryfolders.vdf! Try to make sure that you selected the correct folder!`n" -ForegroundColor Red; Exit-Script}
 #Formats contents and counts how many apps are listed
 $applist = (($applist | Select-String "\t\t\t.*") -replace '\t\t\t"([^"]*).*','$1').Split("\n")
 $appcount = $applist.Count
 #Writes to console to let the user know that it is not recommended to use their computer during this process and to press any key to start
-Write-Host "It is not recommended to use your computer during this process, as Steam will be repeatedly gaining focus.`n`nBefore starting this script, make sure that Steam is running/fully updated, all apps have no pending updates, and the ""Schedule auto-updates"" option is off in the download settings.`n`nPress Ctrl + C to cancel at anytime (you may have to press a random key afterward for it to register)." -ForegroundColor Red
+Write-Host "It is not recommended to use your computer during this process, as Steam will be repeatedly gaining focus.`n`nBefore starting this script, make sure that Steam is running/fully updated, all apps have no pending updates, and the ""Schedule auto-updates"" option is off in the download settings.`n`nPress Ctrl + C to cancel at any time (you may have to press a random key afterward for it to register)." -ForegroundColor Red
 Write-Host "`nPress any key to start:"
 #Waits for user to press any key
 [Console]::ReadKey() | Out-Null
@@ -91,22 +91,24 @@ foreach ($app in $applist) {
     #Calculates the percentage for the progress display
     $finishedapps++
     $percent = [math]::Floor(([decimal] $finishedapps/$appcount)*100)
-    #Writes to console to let the user know of individual app validation
+    #Writes to the console to let the user know of individual app validation
     Write-Host "`tValidated App $app!" -ForegroundColor Magenta
 }
 #Updates progress display to show that the script has been completed
 Write-Progress -Activity "Validating Steam Library Apps..." -Status "Complete!" -PercentComplete 100
-#Writes to console to let the user know that all apps have completed their validation
+#Writes to the console to let the user know that all apps have completed their validation
 Write-Host "Done!" -ForegroundColor Green
-#Writes to console to let the user know that Steam is being restarted
+#Writes to the console to let the user know that Steam is being restarted
 Write-Host "Restarting Steam..." -ForegroundColor Cyan
 #Restarts steam
 Stop-Process -Name steam
 Wait-Process -Name steam
 Start-Process -FilePath ($steaminstallpath + "/steam.exe")
-#Writes to console to let the user know user that steam has been restarted
+#Writes to the console to let the user know the user that Steam has been restarted
 Write-Host "Done!" -ForegroundColor Green
-#Writes to console to let the user know to press any key to exit
+#Writes to the console to let the user know that the script has completely finished.
+Write-Host "`nThe script has completed successfully!" -ForegroundColor DarkGreen -BackgroundColor Black
+#Writes to the console to let the user know to press any key to exit
 Write-Host "`nPress any key to exit:`n"
-#Waits for user to press any key
+#Waits for the user to press any key
 [Console]::ReadKey() | Out-Null
