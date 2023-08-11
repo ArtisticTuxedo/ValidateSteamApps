@@ -21,7 +21,7 @@ else {
     $userinput = [System.Windows.MessageBox]::Show("The script couldn't find your Steam install directory. You will need to select the Steam folder manually.",'Manual input needed:','OKCancel','Exclamation')
 }
 #Creates function to exit the script
-function Exit-Script {Write-Host "Canceled Script!" -ForegroundColor Red; Write-Host "`nPress any key to exit:`n"; [Console]::ReadKey() | Out-Null; exit}
+function Exit-Script {Write-Host "Canceled Script!" -ForegroundColor Red; Write-Host "`nPress any key to exit:`n"; $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown'); exit}
 #Checks to see if the path was not found correctly.
 if (-not $notfound -and ($userinput -ne "Yes")) {
     
@@ -54,10 +54,10 @@ if ($notfound) {Write-Host "Cannot find libraryfolders.vdf! Try to make sure tha
 $applist = (($applist | Select-String "\t\t\t.*") -replace '\t\t\t"([^"]*).*','$1').Split("\n")
 $appcount = $applist.Count
 #Writes to console to let the user know that it is not recommended to use their computer during this process and to press any key to start
-Write-Host "It is not recommended to use your computer during this process, as Steam will be repeatedly gaining focus.`n`nBefore starting this script, make sure that Steam is running/fully updated, all apps have no pending updates, and the ""Schedule auto-updates"" option is off in the download settings.`n`nPress Ctrl + C to cancel at any time (you may have to press a random key afterward for it to register)." -ForegroundColor Red
+Write-Host "It is not recommended to use your computer during this process, as Steam will be repeatedly gaining focus.`n`nBefore starting this script, make sure that Steam is running/fully updated and all apps have no pending updates.`n`nPress Ctrl + C to cancel at any time (you may have to press a random key afterward for it to register.)" -ForegroundColor Red
 Write-Host "`nPress any key to start:"
 #Waits for user to press any key
-[Console]::ReadKey() | Out-Null
+$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 #Clears console
 Clear-Host
 #Writes to console to let the user know that the script is running
@@ -70,12 +70,18 @@ $percent = 0
 foreach ($app in $applist) {
     #Creates and updates progress display
     $currentapp++
-    Write-Progress -Activity "Validating Steam Library Apps..." -Status "Validating App $app... ($currentapp/$appcount)" -PercentComplete $percent -SecondsRemaining -1
+    Write-Progress -Activity "Validating Steam Library Apps..." -Status "Validating App $app... $percent`% ($currentapp/$appcount)" -PercentComplete $percent -SecondsRemaining -1
     #Starts validation
     Start-Process "Steam://validate/$app"
+    #Waits for validation to actually start
+    $before = 0
+    while ($before -eq 0)
+    {
+        $before = (Get-WmiObject -Class Win32_Process -Filter {Name = 'steam.exe'}).ReadTransferCount + (Get-WmiObject -Class Win32_Process -Filter {Name = 'steam.exe'}).WriteTransferCount
+        Start-Sleep -Milliseconds 100
+    }
     #Samples and compares the disk utilization for Steam every 250 milliseconds. When there is no more disk utilization for 1.5 seconds, it assumes the validation is complete and moves on
     $occurrences = 0
-    $before = 0
     $after = 0
     while ($occurrences -ne 6) {
         $before = (Get-WmiObject -Class Win32_Process -Filter {Name = 'steam.exe'}).ReadTransferCount + (Get-WmiObject -Class Win32_Process -Filter {Name = 'steam.exe'}).WriteTransferCount
@@ -98,12 +104,14 @@ foreach ($app in $applist) {
 Write-Progress -Activity "Validating Steam Library Apps..." -Status "Complete!" -PercentComplete 100
 #Writes to the console to let the user know that all apps have completed their validation
 Write-Host "Done!" -ForegroundColor Green
-#Writes to the console to let the user know that Steam is being restarted
+#Writes to the console to let the user know that Steam will be restarted after key is pressed
 Write-Host "Restarting Steam..." -ForegroundColor Cyan
+Write-Host "`nPress any key to restart Steam:"
+$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 #Restarts steam
-Stop-Process -Name steam
+Start-Process "Steam://exit"
 Wait-Process -Name steam
-Start-Process -FilePath ($steaminstallpath + "/steam.exe")
+Start-Process -FilePath "$steaminstallpath/steam.exe"
 #Writes to the console to let the user know the user that Steam has been restarted
 Write-Host "Done!" -ForegroundColor Green
 #Writes to the console to let the user know that the script has completely finished.
@@ -111,4 +119,4 @@ Write-Host "`nThe script has completed successfully!" -ForegroundColor DarkGreen
 #Writes to the console to let the user know to press any key to exit
 Write-Host "`nPress any key to exit:`n"
 #Waits for the user to press any key
-[Console]::ReadKey() | Out-Null
+$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
