@@ -1,6 +1,6 @@
 # ValidateSteamApps
 ## Description:
-I made this script as a way to automatically validate all Steam apps on any Windows 10/11 computer. This script is great for people who have had some kind of problem with their hard drives and are looking for a way to make sure that all games/apps are working properly. I have not tested this script on Windows 8.1 or older, so it might not work
+I made this script as a way to automatically validate all Steam apps on any Windows 10/11 computer. This script is great for people who have had some kind of problem with their hard drives and are looking for a way to make sure that all games/apps are working properly. I have not tested this script on Windows 8.1 or older, so it might not work for those operating systems.
 ## Important information to know before using:
  - This script may take a long time if there are a lot of apps installed.
  - The Steam install directory is the folder where Steam.exe is installed, not where your apps are installed.
